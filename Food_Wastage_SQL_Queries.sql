@@ -1,0 +1,214 @@
+-- CREATE DATABASE food_management;
+-- USE food_management;
+-- CREATE TABLE providers (
+--     Provider_ID INT PRIMARY KEY,
+--     Name VARCHAR(255),
+--     Type VARCHAR(100),
+--     Address VARCHAR(255),
+--     City VARCHAR(100),
+--     Contact VARCHAR(100));
+-- CREATE TABLE receivers (
+--     Receiver_ID INT PRIMARY KEY,
+--     Name VARCHAR(255),
+--     Type VARCHAR(100),
+--     City VARCHAR(100),
+--     Contact VARCHAR(100));
+-- CREATE TABLE food_listings (
+--     Food_ID INT PRIMARY KEY,
+--     Food_Name VARCHAR(255),
+--     Quantity INT,
+--     Expiry_Date DATE,
+--     Provider_ID INT,
+--     Provider_Type VARCHAR(100),
+--     Location VARCHAR(100),
+--     Food_Type VARCHAR(100),
+--     Meal_Type VARCHAR(100));
+-- CREATE TABLE claims (
+--     Claim_ID INT PRIMARY KEY,
+--     Food_ID INT,
+--     Receiver_ID INT,
+--     Status VARCHAR(50),
+--     Timestamp DATETIME);
+-- show tables;
+-- DROP TABLE food_listings;
+-- CREATE TABLE food_listings (
+--     Food_ID INT PRIMARY KEY,
+--     Food_Name VARCHAR(255),
+--     Quantity INT,
+--     Expiry_Date VARCHAR(50),
+--     Provider_ID INT,
+--     Provider_Type VARCHAR(100),
+--     Location VARCHAR(100),
+--     Food_Type VARCHAR(100),
+--     Meal_Type VARCHAR(100));
+-- DROP TABLE claims;
+-- CREATE TABLE claims (
+--     Claim_ID INT PRIMARY KEY,
+--     Food_ID INT,
+--     Receiver_ID INT,
+--     Status VARCHAR(50),
+--     Timestamp VARCHAR(50));
+
+-- Query 1: Number of Providers in Each City
+-- SELECT City, COUNT(*) AS Total_Providers
+-- FROM providers
+-- GROUP BY City
+-- ORDER BY Total_Providers DESC;
+
+-- Query 2: Total Food Quantity Contributed by Each Provider Type
+-- SELECT
+--     p.Type AS Provider_Type,
+--     SUM(f.Quantity) AS Total_Quantity
+-- FROM providers p
+-- INNER JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Type
+-- ORDER BY Total_Quantity DESC;
+
+-- Query 3: Number of Food Listings by Provider Type
+-- SELECT
+--     p.Type AS Provider_Type,
+--     COUNT(f.Food_ID) AS Total_Food_Listings
+-- FROM providers p
+-- INNER JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Type
+-- ORDER BY Total_Food_Listings DESC;
+
+-- Query 4: Top 10 Providers by Total Food Quantity
+-- SELECT
+--     p.Provider_ID,
+--     p.Name,
+--     SUM(f.Quantity) AS Total_Quantity
+-- FROM providers p
+-- INNER JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Provider_ID, p.Name
+-- ORDER BY Total_Quantity DESC
+-- LIMIT 10;
+
+-- Query 5: Top 10 Receivers by Number of Claims
+-- SELECT
+--     r.Receiver_ID,
+--     r.Name,
+--     COUNT(c.Claim_ID) AS Total_Claims
+-- FROM receivers r
+-- INNER JOIN claims c
+-- ON r.Receiver_ID = c.Receiver_ID
+-- GROUP BY r.Receiver_ID, r.Name
+-- ORDER BY Total_Claims DESC
+-- LIMIT 10;
+
+-- Query 6: Most Claimed Food Items
+-- SELECT
+--     f.Food_Name,
+--     COUNT(c.Claim_ID) AS Total_Claims
+-- FROM food_listings f
+-- INNER JOIN claims c
+-- ON f.Food_ID = c.Food_ID
+-- GROUP BY f.Food_Name
+-- ORDER BY Total_Claims DESC;
+
+-- Query 7: Claim Status Percentage
+-- SELECT
+--     Status,
+--     COUNT(*) AS Total_Claims,
+--     ROUND(COUNT(*) * 100.0 /(SELECT COUNT(*) FROM claims),2) AS Percentage
+-- FROM claims
+-- GROUP BY Status;
+
+-- Query 8: Top Cities by Food Quantity
+-- SELECT
+--     Location,
+--     SUM(Quantity) AS Total_Quantity
+-- FROM food_listings
+-- GROUP BY Location
+-- ORDER BY Total_Quantity DESC
+-- LIMIT 10;
+
+-- Query 9: Provider Types Contributing More Than Average Quantity
+-- SELECT
+--     Provider_Type,
+--     SUM(Quantity) AS Total_Quantity
+-- FROM food_listings
+-- GROUP BY Provider_Type
+-- HAVING SUM(Quantity) >
+-- (
+--     SELECT AVG(Quantity)
+--     FROM food_listings
+-- );
+
+-- Query 10: Completed Claims by Receiver Type
+-- SELECT
+--     r.Type,
+--     COUNT(*) AS Completed_Claims
+-- FROM receivers r
+-- INNER JOIN claims c
+-- ON r.Receiver_ID = c.Receiver_ID
+-- WHERE c.Status = 'Completed'
+-- GROUP BY r.Type
+-- ORDER BY Completed_Claims DESC;
+
+-- Query 11: Rank Providers by Food Quantity
+-- SELECT
+--     p.Name,
+--     SUM(f.Quantity) AS Total_Quantity,
+--     RANK() OVER (
+--         ORDER BY SUM(f.Quantity) DESC
+--     ) AS Provider_Rank
+-- FROM providers p
+-- JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Provider_ID, p.Name;
+
+-- Query 12: Rank Providers by Total Food Contribution
+-- SELECT
+--     p.Name,
+--     SUM(f.Quantity) AS Total_Quantity,
+--     RANK() OVER(
+--         ORDER BY SUM(f.Quantity) DESC
+--     ) AS Provider_Rank
+-- FROM providers p
+-- JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Provider_ID, p.Name;
+
+-- Query 13: Categorize Food Listings by Quantity
+-- SELECT
+--     Food_ID,
+--     Food_Name,
+--     Quantity,
+--     CASE
+--         WHEN Quantity >= 80 THEN 'High'
+--         WHEN Quantity >= 40 THEN 'Medium'
+--         ELSE 'Low'
+--     END AS Quantity_Category
+-- FROM food_listings;
+
+-- Query 14:Find providers contributing more than 500 units of food.
+-- WITH ProviderTotals AS
+-- (
+--     SELECT
+--         Provider_ID,
+--         SUM(Quantity) AS Total_Quantity
+--     FROM food_listings
+--     GROUP BY Provider_ID
+-- )
+
+-- SELECT
+--     Provider_ID,
+--     Total_Quantity
+-- FROM ProviderTotals
+-- WHERE Total_Quantity > 100;
+
+-- Query 15: Rank Providers by Food Contribution
+-- SELECT
+--     p.Name,
+--     SUM(f.Quantity) AS Total_Quantity,
+--     DENSE_RANK() OVER(
+--         ORDER BY SUM(f.Quantity) DESC
+--     ) AS Provider_Rank
+-- FROM providers p
+-- JOIN food_listings f
+-- ON p.Provider_ID = f.Provider_ID
+-- GROUP BY p.Provider_ID, p.Name;
